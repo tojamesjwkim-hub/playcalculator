@@ -28,6 +28,9 @@
   .row .mv { display: flex; flex-direction: column; }
   .row .mv button { font-family: Arial; font-size: 9px; line-height: 1; width: 20px; height: 15px; border: 1px solid #000; background: rgba(255,255,255,.6); cursor: pointer; padding: 0; }
   .row .rm { width: 22px; height: 26px; border: 1px solid #000; background: rgba(255,255,255,.6); font-size: 14px; cursor: pointer; }
+  .row .tog { width: 22px; height: 26px; border: 1px solid #000; background: rgba(255,255,255,.6); font-size: 13px; cursor: pointer; padding: 0; }
+  .row.off input.lbl, .row.off input.num, .row.off input.mult, .row.off .opbtn, .row.off .rowval { opacity: .35; }
+  .row.off .rowval { text-decoration: line-through; }
 
   .addrow { margin: 6px 10px; font-family: Arial, sans-serif; font-size: 13px; padding: 7px 12px; border: 1px solid #000; background: rgba(255,255,255,.6); cursor: pointer; }
 
@@ -139,6 +142,7 @@
   // ---- rows ----
   var rowsEl = document.getElementById('rows');
   function rowValue(r){
+    if(r.off) return 0;
     var n=parseFloat(r.num)||0;
     var m=(r.mult===''||r.mult==null)?1:(parseFloat(r.mult)||0);
     var op=r.op||'\u00d7';
@@ -151,7 +155,7 @@
   function renderRows(){
     rowsEl.innerHTML='';
     rows.forEach(function(r, i){
-      var row=document.createElement('div'); row.className='row';
+      var row=document.createElement('div'); row.className='row'+(r.off?' off':'');
 
       var lbl=document.createElement('input'); lbl.className='lbl'; lbl.type='text'; lbl.placeholder='label'; lbl.value=r.label||'';
       lbl.addEventListener('input', function(){ r.label=lbl.value; saveJSON('rows',rows); });
@@ -168,6 +172,10 @@
 
       var val=document.createElement('span'); val.className='rowval'; val._i=i;
 
+      var tog=document.createElement('button'); tog.className='tog'; tog.textContent=r.off?'\u25cb':'\u25cf';
+      tog.title=r.off?'turn on':'turn off';
+      tog.addEventListener('click', function(){ r.off=!r.off; saveJSON('rows',rows); renderRows(); update(); });
+
       var mv=document.createElement('div'); mv.className='mv';
       var up=document.createElement('button'); up.textContent='\u25b2'; up.addEventListener('click', function(){ if(i>0){ var t=rows[i-1]; rows[i-1]=rows[i]; rows[i]=t; saveJSON('rows',rows); renderRows(); update(); } });
       var dn=document.createElement('button'); dn.textContent='\u25bc'; dn.addEventListener('click', function(){ if(i<rows.length-1){ var t=rows[i+1]; rows[i+1]=rows[i]; rows[i]=t; saveJSON('rows',rows); renderRows(); update(); } });
@@ -176,7 +184,7 @@
       var rm=document.createElement('button'); rm.className='rm'; rm.textContent='\u00d7';
       rm.addEventListener('click', function(){ rows.splice(i,1); if(!rows.length) rows.push({label:'',num:0,op:'\u00d7',mult:1}); saveJSON('rows',rows); renderRows(); update(); });
 
-      row.appendChild(lbl); row.appendChild(num); row.appendChild(opbtn); row.appendChild(mult); row.appendChild(val); row.appendChild(mv); row.appendChild(rm);
+      row.appendChild(lbl); row.appendChild(num); row.appendChild(opbtn); row.appendChild(mult); row.appendChild(val); row.appendChild(tog); row.appendChild(mv); row.appendChild(rm);
       rowsEl.appendChild(row);
       r._valEl=val;
     });
